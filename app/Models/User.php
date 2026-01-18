@@ -17,11 +17,12 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    protected $fillable = [];
+
+    /**
+     * @var array
+     */
+    protected $guarded = [];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -45,4 +46,34 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function getSettingsAttribute($value): array
+    {
+        $stored = [];
+
+        if (is_string($value)) {
+            $stored = json_decode($value, true) ?? [];
+        } elseif (is_array($value)) {
+            $stored = $value;
+        }
+
+        return array_replace_recursive([
+            'check_in' => [
+                'interval_minutes' => 1440,
+                'grace_period_minutes' => 120,
+                'last_triggered_at' => null,
+            ],
+            'notifications' => [
+                'enabled' => true,
+                'siblings' => [],
+                'subject' => 'Emergency notification',
+                'message' => 'I may be unable to respond. Please check on me.',
+            ],
+            'data_handling' => [
+                'purge_method' => 'archive',
+                'delay_minutes' => 0,
+            ],
+        ], $stored ?? []);
+    }
+
 }

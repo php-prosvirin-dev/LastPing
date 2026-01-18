@@ -9,6 +9,7 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
 - php - 8.4.11
+- laravel/breeze (BREEZE) - v2
 - laravel/framework (LARAVEL) - v12
 - laravel/prompts (PROMPTS) - v0
 - laravel/mcp (MCP) - v0
@@ -16,6 +17,8 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/sail (SAIL) - v1
 - pestphp/pest (PEST) - v4
 - phpunit/phpunit (PHPUNIT) - v12
+- alpinejs (ALPINEJS) - v3
+- tailwindcss (TAILWINDCSS) - v3
 
 ## Conventions
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.
@@ -104,6 +107,13 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 ## Enums
 - Typically, keys in an Enum should be TitleCase. For example: `FavoritePerson`, `BestLake`, `Monthly`.
+
+=== tests rules ===
+
+## Test Enforcement
+
+- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
+- Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test --compact` with a specific filename or filter.
 
 === laravel/core rules ===
 
@@ -274,4 +284,33 @@ $pages = visit(['/', '/about', '/contact']);
 
 $pages->assertNoJavascriptErrors()->assertNoConsoleLogs();
 </code-snippet>
+
+=== tailwindcss/core rules ===
+
+## Tailwind CSS
+
+- Use Tailwind CSS classes to style HTML; check and use existing Tailwind conventions within the project before writing your own.
+- Offer to extract repeated patterns into components that match the project's conventions (i.e. Blade, JSX, Vue, etc.).
+- Think through class placement, order, priority, and defaults. Remove redundant classes, add classes to parent or child carefully to limit repetition, and group elements logically.
+- You can use the `search-docs` tool to get exact examples from the official documentation when needed.
+
+### Spacing
+- When listing items, use gap utilities for spacing; don't use margins.
+
+<code-snippet name="Valid Flex Gap Spacing Example" lang="html">
+    <div class="flex gap-8">
+        <div>Superior</div>
+        <div>Michigan</div>
+        <div>Erie</div>
+    </div>
+</code-snippet>
+
+### Dark Mode
+- If existing pages and components support dark mode, new pages and components must support dark mode in a similar way, typically using `dark:`.
+
+=== tailwindcss/v3 rules ===
+
+## Tailwind CSS 3
+
+- Always use Tailwind CSS v3; verify you're using only classes supported by this version.
 </laravel-boost-guidelines>
