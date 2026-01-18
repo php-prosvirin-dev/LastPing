@@ -1,59 +1,82 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="public/logo.svg" width="128" height="128" alt="LastPing Logo">
 </p>
 
-## About Laravel
+# LastPing
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+LastPing is a reliable, open-source dead-man's switch and automated emergency notification system built on the Laravel framework. It is designed to monitor for user activity and execute a predefined set of actions if a user fails to check in within a specified timeframe, indicating they may be incapacitated or otherwise in need of assistance.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Project Motivation
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+In a digital world, ensuring that trusted contacts are alerted during an emergency is critical. LastPing provides a fail-safe mechanism for individuals who may work in high-risk environments, live alone, or wish to have an automated system in place to act on their behalf if they are unable to. By requiring periodic check-ins, the system provides peace of mind that a silent alarm will be raised when it matters most.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Architecture Overview
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+LastPing is built as a robust, event-driven Laravel application. Its core logic is managed by a state machine that transitions a user's status through a defined lifecycle.
 
-## Laravel Sponsors
+- **Laravel Backend:** The application leverages the power and security of the Laravel framework for its core logic, routing, and ORM.
+- **Scheduler-Driven Monitoring:** A fundamental component is the Laravel Task Scheduler, which runs a command periodically (e.g., every minute) to check for users who have missed their check-in window. This cron-based approach ensures continuous, reliable monitoring.
+- **State Machine:** Each user's monitoring status is represented by a clear state: `ACTIVE`, `WARNING`, `TRIGGERED`, and `PURGED`. The system transitions between these states based on check-in activity and time elapsed.
+- **Event-Driven:** The system heavily utilizes Laravel's eventing system. State transitions, notifications, and data purges are dispatched as distinct events, allowing for clean, decoupled, and extensible code. Listeners handle the corresponding side effects, such as sending emails or logging actions.
+- **Immutable Audit Log:** All significant actions—such as check-ins, warnings, triggers, and data purges—are recorded in an immutable audit trail to ensure full accountability and traceability.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## Features
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- **Configurable Check-in Intervals:** Users can define their own check-in frequency (e.g., every 24 hours) and an optional grace period.
+- **Automated Warning System:** If a check-in is missed, the system sends an initial warning notification directly to the user.
+- **Emergency Contact Notifications:** In a triggered state, pre-configured trusted contacts are notified via email with a user-defined message.
+- **Safe Data Purge:** A configurable data destruction mechanism can either soft-delete or hard-delete user data to protect privacy after the system is triggered. This is controlled via environment variables to prevent accidental data loss.
+- **API & UI Check-ins:** Users can check in by calling a secure API endpoint or by interacting with a simple web interface.
+- **Complete Audit Trail:** Every state change and action is logged for security and review.
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## High-Level System Flow
 
-## Code of Conduct
+The system operates on a simple yet effective lifecycle:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1.  **ACTIVE:** A user is in the `ACTIVE` state as long as they check in within their configured interval. Each successful check-in resets their "due by" timestamp.
 
-## Security Vulnerabilities
+2.  **WARNING:** If the Laravel Scheduler detects that a user has missed their check-in time, it transitions them to the `WARNING` state. An event is fired to send a warning email to the user, reminding them to check in. The grace period timer begins.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+3.  **TRIGGERED:** If the user fails to check in before the grace period expires, the scheduler transitions them to the `TRIGGERED` state. This is the critical action phase.
+    - An event is dispatched to notify all pre-configured emergency contacts.
+    - A separate event is dispatched to handle the user's data according to the system's configuration (`PURGE_METHOD`).
 
-## License
+4.  **PURGED:** After the data handling action is complete, the user is moved to a final `PURGED` state, and no further actions are taken. This is a terminal state.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## Installation and Setup
+
+1.  **Clone the Repository:**
+    ```bash
+    git clone https://github.com/your-username/lastping.git
+    cd lastping
+    ```
+
+2.  **Install Dependencies:**
+    ```bash
+    composer install
+    npm install
+    ```
+
+3.  **Environment Configuration:**
+    - Copy the example environment file:
+      ```bash
+      cp .env.example .env
+      ```
+    - Generate an application key:
+      ```bash
+      php artisan key:generate
+      ```
+    - Configure your database, mail server, and other environment variables in the `.env` file. Pay close attention to the `PURGE_METHOD` setting.
+
+4.  **Run Database Migrations:**
+    ```bash
+    php artisan migrate
+    ```
