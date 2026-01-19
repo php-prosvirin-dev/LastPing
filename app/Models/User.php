@@ -88,17 +88,11 @@ class User extends Authenticatable
         return $this->hasMany(CheckInLog::class);
     }
 
-    /**
-     * @return UserMonitoringState
-     */
     public function getMonitoringStateAttribute(): UserMonitoringState
     {
         return UserMonitoringState::from($this->attributes['monitoring_state']);
     }
 
-    /**
-     * @return void
-     */
     public function markActive(): void
     {
         $this->update([
@@ -108,9 +102,6 @@ class User extends Authenticatable
         ]);
     }
 
-    /**
-     * @return void
-     */
     public function markWarning(): void
     {
         $this->update([
@@ -119,9 +110,6 @@ class User extends Authenticatable
         ]);
     }
 
-    /**
-     * @return void
-     */
     public function markTriggered(): void
     {
         $this->update([
@@ -130,9 +118,6 @@ class User extends Authenticatable
         ]);
     }
 
-    /**
-     * @return Carbon
-     */
     public function graceExpiresAt(): Carbon
     {
         return $this->last_check_in_at
@@ -140,9 +125,6 @@ class User extends Authenticatable
             ->addMinutes($this->gracePeriodMinutes());
     }
 
-    /**
-     * @return int
-     */
     public function gracePeriodMinutes(): int
     {
         return (int) data_get(

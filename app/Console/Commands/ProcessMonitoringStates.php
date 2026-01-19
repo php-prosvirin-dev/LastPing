@@ -12,24 +12,20 @@ use Illuminate\Support\Facades\Mail;
 class ProcessMonitoringStates extends Command
 {
     protected $signature = 'lastping:process';
+
     protected $description = 'Process monitoring state transitions';
 
-    /**
-     * @return void
-     */
     public function handle(): void
     {
         $now = now();
 
         User::whereNotNull('last_check_in_at')->get()->each(function (User $user) use ($now) {
             match ($user->monitoring_state) {
-                UserMonitoringState::ACTIVE =>
-                $now->greaterThan($user->graceExpiresAt())
+                UserMonitoringState::ACTIVE => $now->greaterThan($user->graceExpiresAt())
                     ? $this->toWarning($user)
                     : null,
 
-                UserMonitoringState::WARNING =>
-                $now->greaterThan($user->graceExpiresAt())
+                UserMonitoringState::WARNING => $now->greaterThan($user->graceExpiresAt())
                     ? $this->toTriggered($user)
                     : null,
 
@@ -38,10 +34,6 @@ class ProcessMonitoringStates extends Command
         });
     }
 
-    /**
-     * @param User $user
-     * @return void
-     */
     protected function toWarning(User $user): void
     {
         if ($user->warning_sent_at) {
@@ -55,10 +47,6 @@ class ProcessMonitoringStates extends Command
         );
     }
 
-    /**
-     * @param User $user
-     * @return void
-     */
     protected function toTriggered(User $user): void
     {
         if ($user->emergency_notified_at) {
