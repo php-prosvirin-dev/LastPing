@@ -10,29 +10,22 @@ use Illuminate\View\View;
 
 class ActionController extends Controller
 {
-    /**
-     * @param Request $request
-     * @return View
-     */
     public function index(Request $request): View
     {
+        $user = $request->user()->load('checkIns');
+
         return view('dashboard.index', [
-            'user' => new UserResource(
-                $request->user()->fresh()
-            )->toArray($request),
+            'userResource' => (new UserResource($user))->toArray($request),
         ]);
     }
 
-    /**
-     * @param Request $request
-     * @param CheckInUser $checkInUser
-     * @return JsonResponse
-     */
     public function checkIn(
         Request $request,
         CheckInUser $checkInUser
     ): JsonResponse {
-        $user = $checkInUser->execute($request->user());
+        $user = $checkInUser
+            ->execute($request->user())
+            ->load('checkIns');
 
         return response()->json(
             new UserResource($user)

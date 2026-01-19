@@ -1,7 +1,8 @@
-window.checkInTimer = function ({ interval, lastCheckIn }) {
+window.checkInTimer = function ({ interval, lastCheckIn, logs }) {
     return {
         interval,
         lastCheckIn,
+        logs: logs ?? [],
         remaining: 0,
         timer: null,
         isLoading: false,
@@ -38,19 +39,19 @@ window.checkInTimer = function ({ interval, lastCheckIn }) {
                 const response = await fetch('/dashboard/check-in', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': document
-                            .querySelector('meta[name="csrf-token"]')
-                            .content,
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Accept': 'application/json',
                     },
                 })
 
                 const data = await response.json()
+
                 this.lastCheckIn = data.last_check_in_at
+                this.logs = data.check_ins
                 this.updateRemaining()
             } finally {
                 this.isLoading = false
             }
-        },
+        }
     }
 }

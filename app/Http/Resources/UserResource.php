@@ -23,6 +23,9 @@ class UserResource extends JsonResource
         return [
             'interval_seconds' => $interval_minutes * 60,
             'last_check_in_at' => $this->last_check_in_at?->timestamp,
+            'check_ins' => CheckInLogResource::collection(
+                $this->whenLoaded('checkIns')
+            ),
         ];
     }
 }
