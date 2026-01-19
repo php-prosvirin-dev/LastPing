@@ -1,5 +1,5 @@
 <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-16">
-    <div x-data="checkInTimer({interval: {{ $intervalSeconds }},lastCheckIn: {{ $lastCheckIn }},})"
+    <div x-data="checkInTimer({interval: {{ $interval_seconds }},lastCheckIn: {{ $last_check_in_at }},})"
          x-init="start()" class="rounded-lg border p-6 dark:border-gray-700 space-y-4 max-w-md">
         <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
             Check-in Timer

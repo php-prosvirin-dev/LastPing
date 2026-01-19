@@ -2,42 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
+use App\Actions\CheckInUser;
+use App\Http\Resources\UserResource;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ActionController extends Controller
 {
     /**
-     * @return Factory|View|\Illuminate\View\View
+     * @param Request $request
+     * @return View
      */
-    public function index()
+    public function index(Request $request): View
     {
-        $user = auth()->user()->fresh();
-
-        $intervalSeconds =
-            ($user->settings['check_in']['interval_minutes'] ?? 60) * 60;
-
-        $lastCheckIn = $user->last_check_in_at
-            ? $user->last_check_in_at->timestamp
-            : null;
-
         return view('dashboard.index', [
-            'intervalSeconds' => $intervalSeconds,
-            'lastCheckIn' => $lastCheckIn,
+            'user' => new UserResource(
+                $request->user()->fresh()
+            )->toArray($request),
         ]);
     }
 
-    public function checkIn(Request $request)
-    {
-        $user = $request->user();
+    /**
+     * @param Request $request
+     * @param CheckInUser $checkInUser
+     * @return JsonResponse
+     */
+    public function checkIn(
+        Request $request,
+        CheckInUser $checkInUser
+    ): JsonResponse {
+        $user = $checkInUser->execute($request->user());
 
-        $user->update([
-            'last_check_in_at' => now(),
-        ]);
-
-        return response()->json([
-            'last_check_in_at' => $user->last_check_in_at->timestamp,
-        ]);
+        return response()->json(
+            new UserResource($user)
+        );
     }
 }
