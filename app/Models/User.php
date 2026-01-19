@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserMonitoringState;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -84,5 +86,69 @@ class User extends Authenticatable
     public function checkIns()
     {
         return $this->hasMany(CheckInLog::class);
+    }
+
+    /**
+     * @return UserMonitoringState
+     */
+    public function getMonitoringStateAttribute(): UserMonitoringState
+    {
+        return UserMonitoringState::from($this->attributes['monitoring_state']);
+    }
+
+    /**
+     * @return void
+     */
+    public function markActive(): void
+    {
+        $this->update([
+            'monitoring_state' => UserMonitoringState::ACTIVE->value,
+            'warning_sent_at' => null,
+            'emergency_notified_at' => null,
+        ]);
+    }
+
+    /**
+     * @return void
+     */
+    public function markWarning(): void
+    {
+        $this->update([
+            'monitoring_state' => UserMonitoringState::WARNING->value,
+            'warning_sent_at' => now(),
+        ]);
+    }
+
+    /**
+     * @return void
+     */
+    public function markTriggered(): void
+    {
+        $this->update([
+            'monitoring_state' => UserMonitoringState::TRIGGERED->value,
+            'emergency_notified_at' => now(),
+        ]);
+    }
+
+    /**
+     * @return Carbon
+     */
+    public function graceExpiresAt(): Carbon
+    {
+        return $this->last_check_in_at
+            ->copy()
+            ->addMinutes($this->gracePeriodMinutes());
+    }
+
+    /**
+     * @return int
+     */
+    public function gracePeriodMinutes(): int
+    {
+        return (int) data_get(
+            $this->settings,
+            'check_in.grace_period_minutes',
+            10
+        );
     }
 }

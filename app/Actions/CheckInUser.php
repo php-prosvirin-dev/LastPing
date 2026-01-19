@@ -15,6 +15,8 @@ class CheckInUser
             'last_check_in_at' => now(),
         ])->save();
 
+        $user->markActive();
+
         CheckInLog::create([
             'user_id' => $user->id,
             'checked_in_at' => $now,
