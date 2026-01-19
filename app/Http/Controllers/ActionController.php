@@ -22,7 +22,7 @@ class ActionController extends Controller
             ? $user->last_check_in_at->timestamp
             : null;
 
-        return view('dashboard', [
+        return view('dashboard.index', [
             'intervalSeconds' => $intervalSeconds,
             'lastCheckIn' => $lastCheckIn,
         ]);
